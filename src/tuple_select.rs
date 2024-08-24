@@ -14,9 +14,7 @@ pub struct SelectEnd;
 impl<Tuple> Selector<Tuple> for SelectEnd
     where Tuple:traits::Tuple
 {
-
     type Output=Tuple::T;
-
     fn get(t:Tuple)->Self::Output {
         t.get()
     }

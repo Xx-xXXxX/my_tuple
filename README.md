@@ -27,4 +27,4 @@ Lower speed to just access latter value compares to native tuple.
 
 ## Usage & Examples
 
-see tuple::examples::examples::example
+see my_tuple::examples::examples::example

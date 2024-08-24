@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["XNTEABDSC"]
 description = "A pretty implementation of tuple"
 keywords=["tuple"]
+repository="https://github.com/Xx-xXXxX/my_tuple"
+homepage ="https://github.com/Xx-xXXxX/my_tuple"
+license="MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

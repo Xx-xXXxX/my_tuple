@@ -28,4 +28,4 @@ impl<Tuple,Next> Selector<Tuple> for SelectNode<Next>
     fn get(t:Tuple)->Self::Output {
         Next::get(t.next())
     }
-} 
+}

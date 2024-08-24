@@ -1,5 +1,5 @@
 
-use crate::tuple::Tuple;
+use crate::traits::Tuple;
 use crate::tuple::TupleEnd;
 use crate::tuple::TupleNode;
 use wacky_traits::collector::Collectable;

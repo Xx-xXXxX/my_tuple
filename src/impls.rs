@@ -1,4 +1,4 @@
-use crate::tuple::{Tuple, TupleEnd, TupleNode};
+use crate::{traits::Tuple, tuple::{TupleEnd, TupleNode}};
 
 impl<T> ToString for TupleEnd<T>
     where T:ToString,//+Clone

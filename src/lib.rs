@@ -7,6 +7,8 @@ pub mod tuple;
 mod examples;
 pub mod patterns;
 pub mod impls;
+pub mod tuple_select;
+pub mod traits;
 
 #[cfg(test)]
 mod tests {

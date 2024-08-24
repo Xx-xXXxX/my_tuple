@@ -2,6 +2,7 @@
 #[cfg(test)]
 mod examples{
     use crate::*;
+    use traits::Tuple;
     use tuple::*;
     use patterns::*;
     use wacky_traits::{collector::*,collectors::*,mapper::*,mappers::*};

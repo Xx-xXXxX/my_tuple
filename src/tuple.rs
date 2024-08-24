@@ -1,10 +1,8 @@
-/// this trait is not useful
-pub trait Tuple{
-    /// type of the value of the Tuple
-    type T;
-    /// get the value of the Tuple
-    fn get(self)->Self::T;
-}
+use crate::traits;
+use crate::traits::Tuple as tTup;
+
+
+
 
 /// The end of a tuple
 #[derive(Clone,PartialEq, Eq)]
@@ -12,7 +10,7 @@ pub struct TupleEnd<T>{
     value:T
 }
 
-impl<T> Tuple for TupleEnd<T> {
+impl<T> tTup for TupleEnd<T> {
     type T=T;
     fn get(self)->T {
         self.value
@@ -21,8 +19,12 @@ impl<T> Tuple for TupleEnd<T> {
 
 impl<T> TupleEnd<T> {
     pub fn new(value:T)->Self{Self{value}}
-    pub fn unwrap(self)->T {self.value}
 }
+
+impl<T> traits::TupleEnd for TupleEnd<T> {
+    fn unwrap(self)->Self::T {self.value}
+}
+
 #[derive(Clone,PartialEq, Eq)]
 pub struct TupleNode<T,TNext>
     //where TNext:Tuple
@@ -31,7 +33,7 @@ pub struct TupleNode<T,TNext>
     next:TNext
 }
 
-impl<T,TNext/*: Tuple */> Tuple for TupleNode<T,TNext> {
+impl<T,TNext/*: Tuple */> tTup for TupleNode<T,TNext> {
     type T=T;
 
     fn get(self)->Self::T {
@@ -51,12 +53,23 @@ impl<T,TNext/*: Tuple */> TupleNode<T,TNext> {
     }
 }
 
-/// converts object to tuple
+impl<T,TNext/*: Tuple */> traits::TupleNode for TupleNode<T,TNext> {
+    type TNext=TNext;
+
+    fn next(self)->TNext {
+        self.next
+    }
+
+    fn unwrap(self)->(T,TNext) {
+        (self.value,self.next)
+    }
+}
+
+/// converts object to its tuple version
 pub trait IntoTuple {
     type Output;
     fn into_tuple(self)->Self::Output;
 }
-
 
 impl<'a,T> IntoTuple for &'a TupleEnd<T> {
     type Output = TupleEnd<&'a T>;
@@ -109,4 +122,3 @@ macro_rules! m_tup_t {
         $crate::tuple::TupleNode::<$v,m_tup_t!($($then),*)>
     }
 }
-

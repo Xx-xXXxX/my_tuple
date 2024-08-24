@@ -4,8 +4,9 @@ pub mod tuple;
 
 //pub mod patterns;
 
-mod test;
+mod examples;
 pub mod patterns;
+pub mod impls;
 
 #[cfg(test)]
 mod tests {

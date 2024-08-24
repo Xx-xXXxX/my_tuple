@@ -32,14 +32,15 @@ impl<T,TNext,TVisitor> Visitable<TVisitor> for TupleNode<T,TNext>
         next.visited(visitor);
     }
 } */
+/// collector which converts accepted values into a tuple
 #[derive(Clone)]
 pub struct CollectAsTuple;
 
 impl<TIn> Mapper<TIn> for CollectAsTuple {
     type Output=TupleEnd<TIn>;
 
-    fn map(self,value:TIn)->Self::Output {
-       TupleEnd::new(value)
+    fn map(self,value:TIn)->(Self::Output,CollectAsTuple) {
+       (TupleEnd::new(value),CollectAsTuple)
     }
 }
 
@@ -48,8 +49,8 @@ impl<TIn,TNext> Collector<TIn,TNext> for CollectAsTuple
 {
     type Output=TupleNode<TIn,TNext>;
 
-    fn collect(self,value:TIn,next:TNext)-><Self as Collector<TIn,TNext>>::Output {
-        TupleNode::new(value, next)
+    fn collect(self,value:TIn,next:TNext)->(<Self as Collector<TIn,TNext>>::Output,CollectAsTuple) {
+        (TupleNode::new(value, next),CollectAsTuple)
     }
 }
 
@@ -58,19 +59,20 @@ impl<T,TCollector> Collectable<TCollector> for TupleEnd<T>
 {
     type Output=TCollector::Output;
 
-    fn collected(self,collector:TCollector)->Self::Output {
+    fn collected(self,collector:TCollector)->(Self::Output,TCollector) {
         collector.map(self.get())
     }
 }
 
 impl<T,TNext,TCollector> Collectable<TCollector> for TupleNode<T,TNext>
     where TNext:Collectable<TCollector>,
-    TCollector:Collector<T,<TNext as Collectable<TCollector>>::Output>+Clone
+    TCollector:Collector<T,<TNext as Collectable<TCollector>>::Output>//+Clone
 {
     type Output= <TCollector as Collector<T,<TNext as Collectable<TCollector>>::Output>>::Output ;
 
-    fn collected(self,collector:TCollector)->Self::Output {
+    fn collected(self,collector:TCollector)->(Self::Output,TCollector) {
         let (value,next)=self.unwrap();
-        collector.clone().collect(value,next.collected(collector))
+        let (n,c2)=next.collected(collector);
+        c2.collect(value,n)
     }
 }

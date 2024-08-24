@@ -1,8 +1,13 @@
+/// this trait is not useful
 pub trait Tuple{
+    /// type of the value of the Tuple
     type T;
+    /// get the value of the Tuple
     fn get(self)->Self::T;
 }
 
+/// The end of a tuple
+#[derive(Clone,PartialEq, Eq)]
 pub struct TupleEnd<T>{
     value:T
 }
@@ -18,7 +23,7 @@ impl<T> TupleEnd<T> {
     pub fn new(value:T)->Self{Self{value}}
     pub fn unwrap(self)->T {self.value}
 }
-
+#[derive(Clone,PartialEq, Eq)]
 pub struct TupleNode<T,TNext>
     //where TNext:Tuple
 {
@@ -46,37 +51,42 @@ impl<T,TNext/*: Tuple */> TupleNode<T,TNext> {
     }
 }
 
+/// converts object to tuple
 pub trait IntoTuple {
-    type TOutput;
-    fn into_tup(self)->Self::TOutput;
+    type Output;
+    fn into_tuple(self)->Self::Output;
 }
 
+
 impl<'a,T> IntoTuple for &'a TupleEnd<T> {
-    type TOutput = TupleEnd<&'a T>;
-    fn into_tup(self)->Self::TOutput{TupleEnd::new(&self.value)}
+    type Output = TupleEnd<&'a T>;
+    fn into_tuple(self)->Self::Output{TupleEnd::new(&self.value)}
 }
 impl<'a,T> IntoTuple for &'a mut TupleEnd<T> {
-    type TOutput = TupleEnd<&'a mut T>;
-    fn into_tup(self)->Self::TOutput{TupleEnd::new(&mut self.value)}
+    type Output = TupleEnd<&'a mut T>;
+    fn into_tuple(self)->Self::Output{TupleEnd::new(&mut self.value)}
 }
 
 impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a TupleNode<T,TNext>
     where &'a TNext:IntoTuple
 {
-    type TOutput=TupleNode<&'a T,<&'a TNext as IntoTuple>::TOutput>;
-    fn into_tup(self)->Self::TOutput {
-        TupleNode::new( &self.value,self.next.into_tup())
+    type Output=TupleNode<&'a T,<&'a TNext as IntoTuple>::Output>;
+    fn into_tuple(self)->Self::Output {
+        TupleNode::new( &self.value,self.next.into_tuple())
     }
 }
 
 impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a mut TupleNode<T,TNext>
     where &'a mut TNext:IntoTuple
 {
-    type TOutput=TupleNode<&'a mut T,<&'a mut TNext as IntoTuple>::TOutput>;
-    fn into_tup(self)->Self::TOutput {
-        TupleNode::new( &mut self.value,self.next.into_tup())
+    type Output=TupleNode<&'a mut T,<&'a mut TNext as IntoTuple>::Output>;
+    fn into_tuple(self)->Self::Output {
+        TupleNode::new( &mut self.value,self.next.into_tuple())
     }
 }
+/// macro to easily create a tuple with inferred type
+/// # Example
+/// m_tup!(1,2f64,String::from("3"))
 #[macro_export]
 macro_rules! m_tup {
     ($v:expr) => {
@@ -87,6 +97,9 @@ macro_rules! m_tup {
     }
 }
 
+/// macro to easily create a tuple type
+/// # Example
+/// m_tup_t!(i32,f64,String)
 #[macro_export]
 macro_rules! m_tup_t {
     ($v:ty) => {
@@ -96,3 +109,4 @@ macro_rules! m_tup_t {
         $crate::tuple::TupleNode::<$v,m_tup_t!($($then),*)>
     }
 }
+

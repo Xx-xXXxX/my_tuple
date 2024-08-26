@@ -4,7 +4,7 @@ use crate::traits::Tuple as tTup;
 
 
 
-/// The end of a tuple
+/// The end of a tuple, contains the value
 #[derive(Clone,PartialEq, Eq)]
 pub struct TupleEnd<T>{
     value:T
@@ -20,11 +20,12 @@ impl<T> tTup for TupleEnd<T> {
 impl<T> TupleEnd<T> {
     pub fn new(value:T)->Self{Self{value}}
 }
-
+/*
 impl<T> traits::TupleEnd for TupleEnd<T> {
     fn unwrap(self)->Self::T {self.value}
-}
+} */
 
+/// The Node of a tuple, contains the value and Tuple of values after
 #[derive(Clone,PartialEq, Eq)]
 pub struct TupleNode<T,TNext>
     //where TNext:Tuple
@@ -52,7 +53,7 @@ impl<T,TNext/*: Tuple */> TupleNode<T,TNext> {
         (self.value,self.next)
     }
 }
-
+/*
 impl<T,TNext/*: Tuple */> traits::TupleNode for TupleNode<T,TNext> {
     type TNext=TNext;
 
@@ -63,7 +64,7 @@ impl<T,TNext/*: Tuple */> traits::TupleNode for TupleNode<T,TNext> {
     fn unwrap(self)->(T,TNext) {
         (self.value,self.next)
     }
-}
+} */
 
 /// converts object to its tuple version
 pub trait IntoTuple {

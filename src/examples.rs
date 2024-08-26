@@ -5,6 +5,7 @@ mod examples{
     use traits::Tuple;
     use tuple::*;
     use patterns::*;
+    use tuple_select::Selector;
     use wacky_traits::{collector::*,collectors::*,mapper::*,mappers::*};
     /*
     fn to_string<'a,T>(a:&'a T)->String
@@ -89,11 +90,23 @@ mod examples{
         (& a_tuple).into_tuple().collected( 
             MapperCollector(
                 &mut get_str, // do to_string
-                () // connect each String together into tuple
+                () // returns ()
             ));
-        //321322
+        // notice this is reversed
         assert_eq!(get_str.str,"321322");
-        //rintln!("{}",get_str.str)
+
+        // get selectors, SelC get the third value of tuple
+        m_tup_sel_def!{SelA,SelB,SelC}
+
+        // use selector to get value
+        let get_a=SelC::get((&mut a_tuple).into_tuple());
+
+        assert_eq!(*get_a,3);
+
+        *get_a=5;
+
+        assert_eq!(*(& a_tuple).into_tuple().next().next().get(),5);
+        //println!("{}",get_str.str)
 
     }
 

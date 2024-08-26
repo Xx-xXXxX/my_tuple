@@ -4,7 +4,7 @@ pub trait Tuple{
     /// get the value of the Tuple
     fn get(self)->Self::T;
 }
-
+/*
 pub trait TupleEnd:Tuple {
     fn unwrap(self)->Self::T;
 }
@@ -14,4 +14,4 @@ pub trait TupleNode:Tuple {
     fn next(self)->Self::TNext;
 
     fn unwrap(self)->(Self::T,Self::TNext);
-}
+} */

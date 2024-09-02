@@ -1,6 +1,9 @@
+
+
+
 use std::marker::PhantomData;
 
-use crate::{traits::{self, Tuple}, tuple::{TupleEnd, TupleNode}};
+use crate::{traits::{self}, tuple::{TupleEnd, TupleNode}};
 
 pub trait Selector<Tuple>{
     type Output;
@@ -16,18 +19,20 @@ impl<Tuple> Selector<Tuple> for SelectEnd
     where Tuple:traits::Tuple
 {
     type Output=Tuple::T;
+    #[inline]
     fn get(t:Tuple)->Self::Output {
         t.get()
     }
 }
 
-impl<T,TNext,Next> Selector<TupleNode<T,TNext>> for SelectNode<Next>
+impl<T,TNext,SNext> Selector<TupleNode<T,TNext>> for SelectNode<SNext>
     where //Tuple:traits::TupleNode,
-    Next:Selector<TNext>
+    SNext:Selector<TNext>
 {
-    type Output=Next::Output;
+    type Output=SNext::Output;
+    #[inline]
     fn get(t:TupleNode<T,TNext>)->Self::Output {
-        Next::get(t.next())
+        SNext::get(t.next())
     }
 }
 #[macro_export]
@@ -43,4 +48,23 @@ macro_rules! m_tup_sel_def {
         type $cur = crate::tuple_select::SelectEnd;
         m_tup_sel_def!{@inner $cur,$($thens),*}
     }
+}
+
+pub trait ChangeTypeOfTuple<Tuple,NewT> {
+    type Output;
+}
+
+impl<TOld,TNew> ChangeTypeOfTuple<TupleEnd<TOld>,TNew> for SelectEnd  {
+    type Output=TupleEnd<TNew>;
+}
+
+impl<TOld,TNext,TNew> ChangeTypeOfTuple<TupleNode<TOld,TNext>,TNew> for SelectEnd  {
+    type Output=TupleNode<TNew,TNext>;
+}
+
+impl<TOld,TNew,TNext,SNext> ChangeTypeOfTuple<TupleNode<TOld,TNext>,TNew> for SelectNode<SNext>
+    where 
+    SNext:ChangeTypeOfTuple<TNext,TNew>
+{
+    type Output=TupleNode<TOld, <SNext as ChangeTypeOfTuple<TNext,TNew>>::Output >;
 }

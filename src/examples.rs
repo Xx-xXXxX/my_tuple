@@ -5,7 +5,7 @@ mod examples{
     use traits::Tuple;
     use tuple::*;
     use patterns::*;
-    use tuple_select::Selector;
+    use tuple_select::{ChangeTypeOfTuple, Selector};
     use wacky_traits::{collector::*,collectors::*,mapper::*,mappers::*};
     /*
     fn to_string<'a,T>(a:&'a T)->String
@@ -107,6 +107,28 @@ mod examples{
 
         assert_eq!(*(& a_tuple).into_tuple().next().next().get(),5);
         //println!("{}",get_str.str)
+
+        //get 3rd type of tuple
+        type CType=<SelC as Selector<ATupleType>>::Output;
+
+        // failed
+        //type CType2=<ATupleType as Collectable<SelC>>::Output;
+
+        let _value_ctype:CType=1i32;
+        //let _value_ctype2:CType2=1i32;
+
+        //make a new tuple type, with 3rd type to be f32
+        type NewType=<SelC as ChangeTypeOfTuple<ATupleType,f32>>::Output;
+
+        let _new_tup:NewType=m_tup!(1,2,3f32,1f32,2f32,3f32);
+
+        /* 
+        failed
+        let mut a=1;
+        let mut refa=&mut a;
+        let mut refrefa=&refa;
+        (**refrefa)=2;
+        */
 
     }
 

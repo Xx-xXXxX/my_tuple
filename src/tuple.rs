@@ -1,4 +1,4 @@
-use crate::traits;
+
 use crate::traits::Tuple as tTup;
 
 
@@ -12,12 +12,14 @@ pub struct TupleEnd<T>{
 
 impl<T> tTup for TupleEnd<T> {
     type T=T;
+    #[inline]
     fn get(self)->T {
         self.value
     }
 }
 
 impl<T> TupleEnd<T> {
+    #[inline]
     pub fn new(value:T)->Self{Self{value}}
 }
 /*
@@ -36,19 +38,20 @@ pub struct TupleNode<T,TNext>
 
 impl<T,TNext/*: Tuple */> tTup for TupleNode<T,TNext> {
     type T=T;
-
+    #[inline]
     fn get(self)->Self::T {
         self.value
     }
 }
 
 impl<T,TNext/*: Tuple */> TupleNode<T,TNext> {
+    #[inline]
     pub fn new(value:T,next:TNext)->Self{Self{value,next}}
-
+    #[inline]
     pub fn next(self)->TNext {
         self.next
     }
-
+    #[inline]
     pub fn unwrap(self)->(T,TNext) {
         (self.value,self.next)
     }
@@ -74,10 +77,12 @@ pub trait IntoTuple {
 
 impl<'a,T> IntoTuple for &'a TupleEnd<T> {
     type Output = TupleEnd<&'a T>;
+    #[inline]
     fn into_tuple(self)->Self::Output{TupleEnd::new(&self.value)}
 }
 impl<'a,T> IntoTuple for &'a mut TupleEnd<T> {
     type Output = TupleEnd<&'a mut T>;
+    #[inline]
     fn into_tuple(self)->Self::Output{TupleEnd::new(&mut self.value)}
 }
 
@@ -85,6 +90,7 @@ impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a TupleNode<T,TNext>
     where &'a TNext:IntoTuple
 {
     type Output=TupleNode<&'a T,<&'a TNext as IntoTuple>::Output>;
+    #[inline]
     fn into_tuple(self)->Self::Output {
         TupleNode::new( &self.value,self.next.into_tuple())
     }
@@ -94,6 +100,7 @@ impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a mut TupleNode<T,TNext>
     where &'a mut TNext:IntoTuple
 {
     type Output=TupleNode<&'a mut T,<&'a mut TNext as IntoTuple>::Output>;
+    #[inline]
     fn into_tuple(self)->Self::Output {
         TupleNode::new( &mut self.value,self.next.into_tuple())
     }

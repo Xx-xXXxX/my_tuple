@@ -1,13 +1,22 @@
-use crate::{traits::Tuple, tuple::{TupleEnd, TupleNode}};
+use crate::tuple::TupleEnd;
 
-impl<T> ToString for TupleEnd<T>
-    where T:ToString,//+Clone
-    TupleEnd<T>:Clone
+use super::tuple::TupleNode;
+/*
+impl ToString for ()
+{
+    fn to_string(&self) -> String {String::new()}
+} */
+
+impl<T> ToString for TupleNode<T,TupleEnd>
+    where T:ToString,
+    TupleNode<T,TupleEnd>:Clone
 {
     fn to_string(&self) -> String {
-        self.clone().get().to_string()
+        let (value,_next)=self.clone().unwrap();
+        format!("{}",value.to_string())
     }
 }
+
 
 impl<T,TNext> ToString for TupleNode<T,TNext>
     where T:ToString,TNext:ToString,

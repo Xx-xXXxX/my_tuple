@@ -1,27 +1,4 @@
 
-use crate::traits::Tuple as tTup;
-
-
-
-
-/// The end of a tuple, contains the value
-#[derive(Clone,PartialEq, Eq)]
-pub struct TupleEnd<T>{
-    value:T
-}
-
-impl<T> tTup for TupleEnd<T> {
-    type T=T;
-    #[inline]
-    fn get(self)->T {
-        self.value
-    }
-}
-
-impl<T> TupleEnd<T> {
-    #[inline]
-    pub fn new(value:T)->Self{Self{value}}
-}
 /*
 impl<T> traits::TupleEnd for TupleEnd<T> {
     fn unwrap(self)->Self::T {self.value}
@@ -36,21 +13,21 @@ pub struct TupleNode<T,TNext>
     next:TNext
 }
 
-impl<T,TNext/*: Tuple */> tTup for TupleNode<T,TNext> {
-    type T=T;
-    #[inline]
-    fn get(self)->Self::T {
-        self.value
-    }
-}
+#[derive(Clone,PartialEq, Eq)]
+pub struct TupleEnd;
 
-impl<T,TNext/*: Tuple */> TupleNode<T,TNext> {
+
+impl<T,TNext> TupleNode<T,TNext> {
     #[inline]
     pub fn new(value:T,next:TNext)->Self{Self{value,next}}
+    /*
     #[inline]
     pub fn next(self)->TNext {
         self.next
     }
+    pub fn get(self)->T {
+        self.value
+    } */
     #[inline]
     pub fn unwrap(self)->(T,TNext) {
         (self.value,self.next)
@@ -75,15 +52,15 @@ pub trait IntoTuple {
     fn into_tuple(self)->Self::Output;
 }
 
-impl<'a,T> IntoTuple for &'a TupleEnd<T> {
-    type Output = TupleEnd<&'a T>;
+impl<'a> IntoTuple for &'a TupleEnd {
+    type Output = TupleEnd;
     #[inline]
-    fn into_tuple(self)->Self::Output{TupleEnd::new(&self.value)}
+    fn into_tuple(self)->Self::Output{TupleEnd}
 }
-impl<'a,T> IntoTuple for &'a mut TupleEnd<T> {
-    type Output = TupleEnd<&'a mut T>;
+impl<'a> IntoTuple for &'a mut TupleEnd {
+    type Output = TupleEnd;
     #[inline]
-    fn into_tuple(self)->Self::Output{TupleEnd::new(&mut self.value)}
+    fn into_tuple(self)->Self::Output{TupleEnd}
 }
 
 impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a TupleNode<T,TNext>
@@ -105,28 +82,27 @@ impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a mut TupleNode<T,TNext>
         TupleNode::new( &mut self.value,self.next.into_tuple())
     }
 }
-/// macro to easily create a tuple with inferred type
-/// # Example
-/// m_tup!(1,2f64,String::from("3"))
-#[macro_export]
-macro_rules! m_tup {
-    ($v:expr) => {
-        $crate::tuple::TupleEnd::new($v)
-    };
-    ($v:expr,$($then:expr),*)=>{
-        $crate::tuple::TupleNode::new($v,m_tup!($($then),*))
+pub trait TuplePushBack<Tuple2> {
+    type Output;
+    fn push_back(self,tup2:Tuple2)->Self::Output;
+}
+
+impl<Tup2> TuplePushBack<Tup2> for TupleEnd {
+    type Output=Tup2;
+    
+    #[inline]
+    fn push_back(self,tup2:Tup2)->Self::Output {
+        tup2
     }
 }
 
-/// macro to easily create a tuple type
-/// # Example
-/// m_tup_t!(i32,f64,String)
-#[macro_export]
-macro_rules! m_tup_t {
-    ($v:ty) => {
-        $crate::tuple::TupleEnd::<$v>
-    };
-    ($v:ty,$($then:ty),*)=>{
-        $crate::tuple::TupleNode::<$v,m_tup_t!($($then),*)>
+impl<T,Next,Tup2> TuplePushBack<Tup2> for TupleNode<T,Next>
+    where Next:TuplePushBack<Tup2>
+{
+    type Output=TupleNode<T,Next::Output>;
+
+    fn push_back(self,tup2:Tup2)->Self::Output {
+        let (v,n)=self.unwrap();
+        TupleNode::new(v,n.push_back(tup2))
     }
 }

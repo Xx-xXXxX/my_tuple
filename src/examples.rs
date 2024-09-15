@@ -4,7 +4,7 @@ mod examples{
     use crate::*;
     use tuple::*;
     use patterns::*;
-    use tuple_select::Selector;
+    use tuple_select::Spliter;
     use wacky_traits::{collector::*,collectors::*,mapper::*,mappers::*};
     use macros::*;
     /*
@@ -14,28 +14,17 @@ mod examples{
         a.to_string()
     } */
     #[derive(Clone)]
-    pub struct tostr;
-    impl<'a,T:ToString> Mapper<&'a T> for tostr {
+    pub struct Tostr;
+    impl<'a,T:ToString> Mapper<&'a T> for Tostr {
         type Output=String;
     
-        fn map(self,value:&'a T)->(Self::Output,tostr) {
-            (value.to_string(),tostr)
+        fn map(&self,value:&'a T)->Self::Output {
+            value.to_string()
         }
     }
 
     
 
-    
-    pub struct GetString{
-        pub str:String
-    }
-    impl<'a,T:ToString> Mapper<&'a T> for &'a mut GetString {
-        type Output=();
-    
-        fn map(self,value:&'a T)->(Self::Output,Self) {
-            (self.str.push_str(&value.to_string()),self)
-        }
-    }
     #[test]
     fn example(){
 
@@ -65,10 +54,10 @@ mod examples{
         // convert tuple's values to tuple of their to_string
         let a_tuple_str_tup=
             (& a_tuple).into_tuple().collected( 
-                MapperCollector(
-                    tostr, // do to_string
+                &MapperCollector(
+                    Tostr, // do to_string
                     CollectAsTuple // connect each String together into tuple
-                )).0;
+                ));
         
         assert!(
             a_tuple_str_tup==
@@ -77,32 +66,26 @@ mod examples{
         
         // join Strings with ", "
         let a_tuple_str=a_tuple_str_tup.collected(
-            FnCollector(// treat fn as collector
-                |a,b|{format!("{}, {}",a,b)}
-            )).0;
+            &FnCollector(// treat fn as collector
+                &|a,b|{format!("{}, {}",a,b)}
+            ));
         
         assert_eq!(a_tuple_str,"2, 2, 3, 1, 2, 3");
-
-        let mut get_str=GetString{str:String::new()};
-        
-        (& a_tuple).into_tuple().collected( 
-            MapperCollector(
-                &mut get_str, // do to_string
-                () // returns ()
-            ));
-        // notice this is reversed
-        assert_eq!(get_str.str,"321322");
 
         // get selectors, SelC get the third value of tuple
         m_tup_sel_def!{SelA,SelB,SelC}
         
         let (get_c_a,get_c_b)=SelC::split((&a_tuple).into_tuple());
-        let get_c=get_c_b.unwrap().0;
-        assert_eq!(*get_c,3)
+        let get_c=((&get_c_b).into_tuple()).unwrap().0;
+        assert_eq!(**get_c,3);
 
-    }
-    mod example_type_program{
+        // bind 2 tuple, insert 123f32 at C
+        let _a_tuple_insert_c=get_c_a.clone().bind(TupleNode::new(123f32, get_c_b.clone()));
         
-        
+        // bind 2 tuple, remove C
+        let _a_tuple_del_c=utils::tuple_type_split_operate((&a_tuple).into_tuple(),&SelC::default(), & (crate::utils::pop_front));//get_c_a.bind(get_c_b.unwrap().1);
+
+        let _a_tuple_get_c=utils::tuple_get((&a_tuple).into_tuple(),&SelC::default());
     }
+    
 }

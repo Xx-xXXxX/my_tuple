@@ -6,12 +6,8 @@ impl<T> traits::TupleEnd for TupleEnd<T> {
 
 /// The Node of a tuple, contains the value and Tuple of values after
 #[derive(Clone,PartialEq, Eq)]
-pub struct TupleNode<T,TNext>
+pub struct TupleNode<T,TNext>(pub T,pub TNext);
     //where TNext:Tuple
-{
-    value:T,
-    next:TNext
-}
 
 #[derive(Clone,PartialEq, Eq)]
 pub struct TupleEnd;
@@ -19,7 +15,7 @@ pub struct TupleEnd;
 
 impl<T,TNext> TupleNode<T,TNext> {
     #[inline]
-    pub fn new(value:T,next:TNext)->Self{Self{value,next}}
+    pub fn new(value:T,next:TNext)->Self{Self(value,next)}
     /*
     #[inline]
     pub fn next(self)->TNext {
@@ -28,10 +24,11 @@ impl<T,TNext> TupleNode<T,TNext> {
     pub fn get(self)->T {
         self.value
     } */
+    
     #[inline]
     pub fn unwrap(self)->(T,TNext) {
-        (self.value,self.next)
-    }
+        (self.0,self.1)
+    } 
 }
 /*
 impl<T,TNext/*: Tuple */> traits::TupleNode for TupleNode<T,TNext> {
@@ -69,7 +66,7 @@ impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a TupleNode<T,TNext>
     type Output=TupleNode<&'a T,<&'a TNext as IntoTuple>::Output>;
     #[inline]
     fn into_tuple(self)->Self::Output {
-        TupleNode::new( &self.value,self.next.into_tuple())
+        TupleNode::new( &self.0,self.1.into_tuple())
     }
 }
 
@@ -79,30 +76,30 @@ impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a mut TupleNode<T,TNext>
     type Output=TupleNode<&'a mut T,<&'a mut TNext as IntoTuple>::Output>;
     #[inline]
     fn into_tuple(self)->Self::Output {
-        TupleNode::new( &mut self.value,self.next.into_tuple())
+        TupleNode::new( &mut self.0,self.1.into_tuple())
     }
 }
-pub trait TuplePushBack<Tuple2> {
+pub trait TupleBind<Tuple2> {
     type Output;
-    fn push_back(self,tup2:Tuple2)->Self::Output;
+    fn bind(self,tup2:Tuple2)->Self::Output;
 }
 
-impl<Tup2> TuplePushBack<Tup2> for TupleEnd {
+impl<Tup2> TupleBind<Tup2> for TupleEnd {
     type Output=Tup2;
     
     #[inline]
-    fn push_back(self,tup2:Tup2)->Self::Output {
+    fn bind(self,tup2:Tup2)->Self::Output {
         tup2
     }
 }
 
-impl<T,Next,Tup2> TuplePushBack<Tup2> for TupleNode<T,Next>
-    where Next:TuplePushBack<Tup2>
+impl<T,Next,Tup2> TupleBind<Tup2> for TupleNode<T,Next>
+    where Next:TupleBind<Tup2>
 {
     type Output=TupleNode<T,Next::Output>;
 
-    fn push_back(self,tup2:Tup2)->Self::Output {
+    fn bind(self,tup2:Tup2)->Self::Output {
         let (v,n)=self.unwrap();
-        TupleNode::new(v,n.push_back(tup2))
+        TupleNode::new(v,n.bind(tup2))
     }
 }

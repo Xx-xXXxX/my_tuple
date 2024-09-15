@@ -9,6 +9,7 @@ pub mod patterns;
 pub mod impls;
 pub mod tuple_select;
 pub mod macros;
+pub mod utils;
 
 #[cfg(test)]
 mod tests {

@@ -5,12 +5,13 @@ use std::marker::PhantomData;
 
 use wacky_traits::mapper::Mapper;
 
-use super::{tuple::{TupleNode}};
+use crate::tuple::{TupleBind, TupleEnd};
 
-pub trait Selector<Tuple>{
+use super::tuple::TupleNode;
+
+pub trait Spliter<Tuple>{
     type Output1;
     type Output2;
-    
     fn split(t:Tuple)->(Self::Output1,Self::Output2);
 }
 #[derive(Default)]
@@ -19,40 +20,40 @@ pub struct SelectNode<Next>{p:PhantomData<Next>}
 #[derive(Default)]
 pub struct SelectEnd;
 
-impl Selector<()> for SelectEnd
+impl Spliter<TupleEnd> for SelectEnd
 {
-    type Output1=();
+    type Output1=TupleEnd;
 
-    type Output2=();
+    type Output2=TupleEnd;
 
-    fn split(t:())->(Self::Output1,Self::Output2) {
-        ((),t)
+    fn split(_:TupleEnd)->(Self::Output1,Self::Output2) {
+        (TupleEnd,TupleEnd)
     }
 }
 
-impl<T,TNext> Selector<TupleNode<T,TNext>> for SelectEnd
+impl<T,TNext> Spliter<TupleNode<T,TNext>> for SelectEnd
 {
-    type Output1=();
+    type Output1=TupleEnd;
 
     type Output2=TupleNode<T,TNext>;
 
     fn split(t:TupleNode<T,TNext>)->(Self::Output1,Self::Output2) {
-        ((),t)
+        (TupleEnd,t)
     }
 }
 
 
-impl<T,TNext,SNext> Selector<TupleNode<T,TNext>> for SelectNode<SNext>
+impl<T,TNext,SNext> Spliter<TupleNode<T,TNext>> for SelectNode<SNext>
     where //Tuple:traits::TupleNode,
-    SNext:Selector<TNext>
+    SNext:Spliter<TNext>
 {
-    type Output1=TupleNode<T,< SNext as Selector<TNext>> ::Output1>;
+    type Output1=TupleNode<T,< SNext as Spliter<TNext>> ::Output1>;
     
-    type Output2=< SNext as Selector<TNext>> ::Output2;
+    type Output2=< SNext as Spliter<TNext>> ::Output2;
     
     fn split(t:TupleNode<T,TNext>)->(Self::Output1,Self::Output2) {
         let (v,n)=t.unwrap();
-        let (o1,o2)=< SNext as Selector<TNext>>::split(n);
+        let (o1,o2)=< SNext as Spliter<TNext>>::split(n);
         (TupleNode::new(v, o1),o2)
     }
     /*
@@ -62,6 +63,10 @@ impl<T,TNext,SNext> Selector<TupleNode<T,TNext>> for SelectNode<SNext>
         SNext::get(t.next())
     } */
 }
+
+
+
+
 
 /*
 mapper

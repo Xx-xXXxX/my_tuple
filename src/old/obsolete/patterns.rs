@@ -41,8 +41,8 @@ pub struct CollectAsTuple;
 impl<TIn> Mapper<TIn> for CollectAsTuple {
     type Output=TupleNode<TIn,TupleEnd>;
 
-    fn map(&self,value:TIn)->Self::Output {
-       TupleNode::new(value, TupleEnd)
+    fn map(self,value:TIn)->(Self::Output,CollectAsTuple) {
+       (TupleNode::new(value, TupleEnd),CollectAsTuple)
     }
 }
 
@@ -51,8 +51,8 @@ impl<TIn,TNext> Collector<TIn,TNext> for CollectAsTuple
 {
     type Output=TupleNode<TIn,TNext>;
 
-    fn collect(&self,value:TIn,next:TNext)-><Self as Collector<TIn,TNext>>::Output {
-        TupleNode::new(value, next)
+    fn collect(self,value:TIn,next:TNext)->(<Self as Collector<TIn,TNext>>::Output,CollectAsTuple) {
+        (TupleNode::new(value, next),CollectAsTuple)
     }
 }
 /*
@@ -85,7 +85,7 @@ impl<T,TCollector> Collectable<TCollector> for TupleNode<T,TupleEnd>
 {
     type Output= <TCollector as Mapper<T>>::Output ;
 
-    fn collected(self,collector:&TCollector)->Self::Output {
+    fn collected(self,collector:TCollector)->(Self::Output,TCollector) {
         let (value,_next)=self.unwrap();
         collector.map(value)
     }
@@ -96,10 +96,10 @@ impl<T,TT,TTNext,TCollector> Collectable<TCollector> for TupleNode<T,TupleNode<T
 {
     type Output= <TCollector as Collector<T,<TupleNode<TT,TTNext> as Collectable<TCollector>>::Output>>::Output ;
 
-    fn collected(self,collector:&TCollector)->Self::Output {
+    fn collected(self,collector:TCollector)->(Self::Output,TCollector) {
         let (value,next)=self.unwrap();
-        let n=next.collected(collector);
-        collector.collect(value,n)
+        let (n,c2)=next.collected(collector);
+        c2.collect(value,n)
     }
 }
 

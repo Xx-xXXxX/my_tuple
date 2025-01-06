@@ -3,16 +3,16 @@
 
 use std::marker::PhantomData;
 
-use wacky_traits::mapper::Mapper;
 
-use crate::tuple::{TupleBind, TupleEnd};
+use crate::tuple::TupleEnd;
 
 use super::tuple::TupleNode;
 
 pub trait Spliter<Tuple>{
+    type Output0;
     type Output1;
-    type Output2;
-    fn split(t:Tuple)->(Self::Output1,Self::Output2);
+    fn split(t:Tuple)->(Self::Output0,Self::Output1);
+    fn split_get1(t:Tuple)->Self::Output1;
 }
 #[derive(Default)]
 pub struct SelectNode<Next>{p:PhantomData<Next>}
@@ -22,23 +22,31 @@ pub struct SelectEnd;
 
 impl Spliter<TupleEnd> for SelectEnd
 {
+    type Output0=TupleEnd;
+
     type Output1=TupleEnd;
-
-    type Output2=TupleEnd;
-
-    fn split(_:TupleEnd)->(Self::Output1,Self::Output2) {
+    #[inline]
+    fn split(_:TupleEnd)->(Self::Output0,Self::Output1) {
         (TupleEnd,TupleEnd)
+    }
+    
+    fn split_get1(_:TupleEnd)->Self::Output1 {
+        TupleEnd
     }
 }
 
 impl<T,TNext> Spliter<TupleNode<T,TNext>> for SelectEnd
 {
-    type Output1=TupleEnd;
+    type Output0=TupleEnd;
 
-    type Output2=TupleNode<T,TNext>;
-
-    fn split(t:TupleNode<T,TNext>)->(Self::Output1,Self::Output2) {
+    type Output1=TupleNode<T,TNext>;
+    #[inline]
+    fn split(t:TupleNode<T,TNext>)->(Self::Output0,Self::Output1) {
         (TupleEnd,t)
+    }
+    
+    fn split_get1(t:TupleNode<T,TNext>)->Self::Output1 {
+        t
     }
 }
 
@@ -47,56 +55,17 @@ impl<T,TNext,SNext> Spliter<TupleNode<T,TNext>> for SelectNode<SNext>
     where //Tuple:traits::TupleNode,
     SNext:Spliter<TNext>
 {
-    type Output1=TupleNode<T,< SNext as Spliter<TNext>> ::Output1>;
+    type Output0=TupleNode<T,< SNext as Spliter<TNext>> ::Output0>;
     
-    type Output2=< SNext as Spliter<TNext>> ::Output2;
-    
-    fn split(t:TupleNode<T,TNext>)->(Self::Output1,Self::Output2) {
+    type Output1=< SNext as Spliter<TNext>> ::Output1;
+    #[inline]
+    fn split(t:TupleNode<T,TNext>)->(Self::Output0,Self::Output1) {
         let (v,n)=t.unwrap();
         let (o1,o2)=< SNext as Spliter<TNext>>::split(n);
-        (TupleNode::new(v, o1),o2)
+        (TupleNode(v, o1),o2)
     }
-    /*
-    type Output=SNext::Output;
-    #[inline]
-    fn get(t:TupleNode<T,TNext>)->Self::Output {
-        SNext::get(t.next())
-    } */
-}
-
-
-
-
-
-/*
-mapper
-pub trait ModifyTuple<Tuple> {
-    type Output;
-}
- */
-/*
-pub trait MapTuple<Tuple,TMapper>:Selector<Tuple>
-    where TMapper:Mapper< <Self as Selector<Tuple>>::Output >
-{
-    type Output;
-    fn apply(t:Tuple,mapper:&TMapper)->Self::Output{
-        mapper.map(<Self as Selector<Tuple>>::get(t))
+    
+    fn split_get1(t:TupleNode<T,TNext>)->Self::Output1 {
+        <SNext as Spliter<TNext>>::split_get1(t.unwrap().1)
     }
-    //type Output= <TMapper as Mapper< <Self as Selector<Tuple>>::Output >>::Output ;
 }
-
-impl<Tuple,TMapper> MapTuple<Tuple,TMapper> for SelectEnd 
-    where TMapper:Mapper< <Self as Selector<Tuple>>::Output >,
-    Tuple:traits::Tuple
-{
-    type Output=<TMapper as Mapper< Tuple >>::Output;
-}
-
-impl<TOld,TNext,SNext,TMapper> MapTuple<TupleNode<TOld,TNext>,TMapper> for SelectNode<SNext>
-    where 
-    SNext:MapTuple<TNext,TMapper>,
-    TMapper:Mapper< <Self as Selector<TupleNode<TOld,TNext>>>::Output >
-{
-    type Output=TupleNode<TOld, <SNext as MapTuple<TNext,TMapper> >::Output >;
-}
- */

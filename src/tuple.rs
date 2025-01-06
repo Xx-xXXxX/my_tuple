@@ -1,49 +1,24 @@
 
-/*
-impl<T> traits::TupleEnd for TupleEnd<T> {
-    fn unwrap(self)->Self::T {self.value}
-} */
 
 /// The Node of a tuple, contains the value and Tuple of values after
-#[derive(Clone,PartialEq, Eq)]
+#[derive(Clone,PartialEq, Eq,Default)]
 pub struct TupleNode<T,TNext>(pub T,pub TNext);
-    //where TNext:Tuple
 
-#[derive(Clone,PartialEq, Eq)]
+#[derive(Clone,PartialEq, Eq,Default,Debug)]
 pub struct TupleEnd;
 
-
 impl<T,TNext> TupleNode<T,TNext> {
-    #[inline]
-    pub fn new(value:T,next:TNext)->Self{Self(value,next)}
-    /*
-    #[inline]
-    pub fn next(self)->TNext {
-        self.next
-    }
-    pub fn get(self)->T {
-        self.value
-    } */
     
     #[inline]
     pub fn unwrap(self)->(T,TNext) {
         (self.0,self.1)
     } 
 }
-/*
-impl<T,TNext/*: Tuple */> traits::TupleNode for TupleNode<T,TNext> {
-    type TNext=TNext;
 
-    fn next(self)->TNext {
-        self.next
-    }
-
-    fn unwrap(self)->(T,TNext) {
-        (self.value,self.next)
-    }
-} */
-
-/// converts object to its tuple version
+/// converts object to its tuple version.
+/// 
+/// In all conitions, structs are needed for different impl
+/// so the only (and must) way to use a 'tuple' is transform them into TupleNode and TupleEnd
 pub trait IntoTuple {
     type Output;
     fn into_tuple(self)->Self::Output;
@@ -60,46 +35,22 @@ impl<'a> IntoTuple for &'a mut TupleEnd {
     fn into_tuple(self)->Self::Output{TupleEnd}
 }
 
-impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a TupleNode<T,TNext>
-    where &'a TNext:IntoTuple
+impl<'a,T,TNext,TNextRef> IntoTuple for &'a TupleNode<T,TNext>
+    where &'a TNext:IntoTuple<Output = TNextRef>
 {
-    type Output=TupleNode<&'a T,<&'a TNext as IntoTuple>::Output>;
+    type Output=TupleNode<&'a T,TNextRef>;
     #[inline]
     fn into_tuple(self)->Self::Output {
-        TupleNode::new( &self.0,self.1.into_tuple())
+        TupleNode( &self.0,self.1.into_tuple())
     }
 }
 
-impl<'a,T,TNext/*:Tuple */> IntoTuple for &'a mut TupleNode<T,TNext>
-    where &'a mut TNext:IntoTuple
+impl<'a,T,TNext,TNextRefMut> IntoTuple for &'a mut TupleNode<T,TNext>
+    where &'a mut TNext:IntoTuple<Output = TNextRefMut>
 {
-    type Output=TupleNode<&'a mut T,<&'a mut TNext as IntoTuple>::Output>;
+    type Output=TupleNode<&'a mut T,TNextRefMut>;
     #[inline]
     fn into_tuple(self)->Self::Output {
-        TupleNode::new( &mut self.0,self.1.into_tuple())
-    }
-}
-pub trait TupleBind<Tuple2> {
-    type Output;
-    fn bind(self,tup2:Tuple2)->Self::Output;
-}
-
-impl<Tup2> TupleBind<Tup2> for TupleEnd {
-    type Output=Tup2;
-    
-    #[inline]
-    fn bind(self,tup2:Tup2)->Self::Output {
-        tup2
-    }
-}
-
-impl<T,Next,Tup2> TupleBind<Tup2> for TupleNode<T,Next>
-    where Next:TupleBind<Tup2>
-{
-    type Output=TupleNode<T,Next::Output>;
-
-    fn bind(self,tup2:Tup2)->Self::Output {
-        let (v,n)=self.unwrap();
-        TupleNode::new(v,n.bind(tup2))
+        TupleNode( &mut self.0,self.1.into_tuple())
     }
 }

@@ -10,6 +10,7 @@ pub mod impls;
 pub mod tuple_select;
 pub mod macros;
 pub mod utils;
+mod trouble_test;
 
 #[cfg(test)]
 mod tests {

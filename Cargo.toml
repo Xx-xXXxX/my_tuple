@@ -2,7 +2,7 @@
 [package]
 name = "my_tuple"
 version = "1.0.0"
-edition = "2021"
+edition = "2024"
 authors = ["XNTEABDSC"]
 description = "A pretty implementation of tuple"
 keywords=["tuple"]
